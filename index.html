@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Ad Tracking & Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+
+        .ad-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .ad-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .ad-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .ad-item.flagged {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(200, 35, 51, 0.05) 100%);
+        }
+
+        .ad-item.suspicious {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(224, 168, 0, 0.05) 100%);
+        }
+
+        .ad-item.verified {
+            border-color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(34, 139, 58, 0.05) 100%);
+        }
+
+        .ad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ad-id {
+            font-weight: bold;
+            color: #1e3c72;
+            font-size: 1.1em;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-flagged {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-suspicious {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .status-verified {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-active {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .ad-content {
+            margin: 15px 0;
+        }
+
+        .ad-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .ad-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> Police Ad Tracking & Detection System</h1>
+            <p>Monitor and analyze variable advertisements for law enforcement purposes</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalAds">0</div>
+                <div class="stat-label">Total Ads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="flaggedAds">0</div>
+                <div class="stat-label">Flagged</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="suspiciousAds">0</div>
+                <div class="stat-label">Suspicious</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="verifiedAds">0</div>
+                <div class="stat-label">Verified</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <h2> Report New Advertisement</h2>
+                <form id="adForm">
+                    <div class="form-group">
+                        <label for="adId">Advertisement ID</label>
+                        <input type="text" id="adId" placeholder="Enter unique ad identifier" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="platform">Platform</label>
+                        <select id="platform" required>
+                            <option value="">Select platform</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Google Ads">Google Ads</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="Twitter">Twitter</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="Website">Website</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="advertiser">Advertiser/Company</label>
+                        <input type="text" id="advertiser" placeholder="Company or individual name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" required>
+                            <option value="">Select category</option>
+                            <option value="Financial">Financial Services</option>
+                            <option value="Health">Health/Medical</option>
+                            <option value="Dating">Dating/Relationships</option>
+                            <option value="Investment">Investment/Crypto</option>
+                            <option value="Employment">Employment/Jobs</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Education">Education</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="content">Advertisement Content</label>
+                        <textarea id="content" rows="4" placeholder="Copy and paste the ad content here..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="url">Target URL</label>
+                        <input type="url" id="url" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reportedBy">Reported By</label>
+                        <input type="text" id="reportedBy" placeholder="Officer name or badge number" required>
+                    </div>
+                    
+                    <button type="submit" class="btn">Add Advertisement</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2> Search & Filter</h2>
+                <div class="search-filters">
+                    <div class="form-group">
+                        <label for="searchTerm">Search Term</label>
+                        <input type="text" id="searchTerm" placeholder="Search ads...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterStatus">Status</label>
+                        <select id="filterStatus">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="suspicious">Suspicious</option>
+                            <option value="flagged">Flagged</option>
+                            <option value="verified">Verified</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterPlatform">Platform</label>
+                        <select id="filterPlatform">
+                            <option value="">All Platforms</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Google Ads">Google Ads</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="Twitter">Twitter</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="Website">Website</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filterCategory">Category</label>
+                        <select id="filterCategory">
+                            <option value="">All Categories</option>
+                            <option value="Financial">Financial Services</option>
+                            <option value="Health">Health/Medical</option>
+                            <option value="Dating">Dating/Relationships</option>
+                            <option value="Investment">Investment/Crypto</option>
+                            <option value="Employment">Employment/Jobs</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Education">Education</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button onclick="applyFilters()" class="btn">Apply Filters</button>
+                <button onclick="clearFilters()" class="btn btn-warning">Clear Filters</button>
+            </div>
+        </div>
+
+        <div class="ad-list">
+            <h2> Advertisement Database</h2>
+            <div id="alertContainer"></div>
+            <div id="adContainer">
+                <p style="text-align: center; color: #666; padding: 40px;">No advertisements recorded yet. Use the form above to add new entries.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ads = [];
+        let filteredAds = [];
+
+        // Suspicious keywords for automatic flagging
+        const suspiciousKeywords = [
+            'guaranteed', 'easy money', 'work from home', 'get rich quick', 'no experience needed',
+            'urgent', 'limited time', 'act now', 'free money', 'investment opportunity',
+            'cryptocurrency', 'bitcoin', 'forex', 'binary options', 'make money fast',
+            'lose weight fast', 'miracle cure', 'doctors hate', 'secret method',
+            'government grants', 'tax refund', 'claim now', 'winner selected',
+            'congratulations', 'you have won', 'click here now', 'verify account'
+        ];
+
+        function generateId() {
+            return 'AD' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+        }
+
+        function analyzeContent(content) {
+            const lowerContent = content.toLowerCase();
+            let suspiciousCount = 0;
+            let foundKeywords = [];
+
+            suspiciousKeywords.forEach(keyword => {
+                if (lowerContent.includes(keyword.toLowerCase())) {
+                    suspiciousCount++;
+                    foundKeywords.push(keyword);
+                }
+            });
+
+            // Determine status based on suspicious content
+            if (suspiciousCount >= 3) {
+                return { status: 'flagged', keywords: foundKeywords };
+            } else if (suspiciousCount >= 1) {
+                return { status: 'suspicious', keywords: foundKeywords };
+            } else {
+                return { status: 'active', keywords: [] };
+            }
+        }
+
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function addAd(adData) {
+            const analysis = analyzeContent(adData.content);
+            
+            const ad = {
+                id: adData.id || generateId(),
+                platform: adData.platform,
+                advertiser: adData.advertiser,
+                category: adData.category,
+                content: adData.content,
+                url: adData.url,
+                reportedBy: adData.reportedBy,
+                timestamp: new Date().toISOString(),
+                status: analysis.status,
+                suspiciousKeywords: analysis.keywords
+            };
+
+            ads.unshift(ad);
+            updateStats();
+            renderAds();
+
+            if (analysis.status === 'flagged') {
+                showAlert(`Advertisement ${ad.id} has been automatically flagged due to suspicious content!`, 'danger');
+            } else if (analysis.status === 'suspicious') {
+                showAlert(`Advertisement ${ad.id} marked as suspicious for manual review.`, 'warning');
+            } else {
+                showAlert(`Advertisement ${ad.id} added successfully.`, 'success');
+            }
+        }
+
+        function updateAdStatus(adId, newStatus) {
+            const ad = ads.find(a => a.id === adId);
+            if (ad) {
+                ad.status = newStatus;
+                updateStats();
+                renderAds();
+                showAlert(`Advertisement ${adId} status updated to ${newStatus}.`, 'success');
+            }
+        }
+
+        function deleteAd(adId) {
+            if (confirm('Are you sure you want to delete this advertisement record?')) {
+                ads = ads.filter(a => a.id !== adId);
+                updateStats();
+                renderAds();
+                showAlert(`Advertisement ${adId} deleted successfully.`, 'success');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalAds').textContent = ads.length;
+            document.getElementById('flaggedAds').textContent = ads.filter(a => a.status === 'flagged').length;
+            document.getElementById('suspiciousAds').textContent = ads.filter(a => a.status === 'suspicious').length;
+            document.getElementById('verifiedAds').textContent = ads.filter(a => a.status === 'verified').length;
+        }
+
+        function renderAds() {
+            const container = document.getElementById('adContainer');
+            const adsToShow = filteredAds.length > 0 ? filteredAds : ads;
+
+            if (adsToShow.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No advertisements found.</p>';
+                return;
+            }
+
+            container.innerHTML = adsToShow.map(ad => `
+                <div class="ad-item ${ad.status}">
+                    <div class="ad-header">
+                        <div class="ad-id">${ad.id}</div>
+                        <div class="status-badge status-${ad.status}">${ad.status}</div>
+                    </div>
+                    
+                    <div class="ad-content">
+                        <strong>Content:</strong> ${ad.content.substring(0, 200)}${ad.content.length > 200 ? '...' : ''}
+                    </div>
+                    
+                    ${ad.suspiciousKeywords.length > 0 ? `
+                        <div style="background: rgba(220, 53, 69, 0.1); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <strong>⚠️ Suspicious Keywords:</strong> ${ad.suspiciousKeywords.join(', ')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="ad-meta">
+                        <div><strong>Platform:</strong> ${ad.platform}</div>
+                        <div><strong>Advertiser:</strong> ${ad.advertiser}</div>
+                        <div><strong>Category:</strong> ${ad.category}</div>
+                        <div><strong>Reported By:</strong> ${ad.reportedBy}</div>
+                        <div><strong>Date:</strong> ${new Date(ad.timestamp).toLocaleDateString()}</div>
+                        <div><strong>Time:</strong> ${new Date(ad.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                    
+                    ${ad.url ? `<div style="margin-top: 10px;"><strong>URL:</strong> <a href="${ad.url}" target="_blank" style="color: #2a5298;">${ad.url}</a></div>` : ''}
+                    
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                        <button onclick="updateAdStatus('${ad.id}', 'verified')" class="btn" style="background: #28a745;">Mark Verified</button>
+                        <button onclick="updateAdStatus('${ad.id}', 'suspicious')" class="btn btn-warning">Mark Suspicious</button>
+                        <button onclick="updateAdStatus('${ad.id}', 'flagged')" class="btn btn-danger">Flag</button>
+                        <button onclick="deleteAd('${ad.id}')" class="btn btn-danger">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const platformFilter = document.getElementById('filterPlatform').value;
+            const categoryFilter = document.getElementById('filterCategory').value;
+
+            filteredAds = ads.filter(ad => {
+                const matchesSearch = !searchTerm || 
+                    ad.content.toLowerCase().includes(searchTerm) ||
+                    ad.advertiser.toLowerCase().includes(searchTerm) ||
+                    ad.id.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || ad.status === statusFilter;
+                const matchesPlatform = !platformFilter || ad.platform === platformFilter;
+                const matchesCategory = !categoryFilter || ad.category === categoryFilter;
+
+                return matchesSearch && matchesStatus && matchesPlatform && matchesCategory;
+            });
+
+            renderAds();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchTerm').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterPlatform').value = '';
+            document.getElementById('filterCategory').value = '';
+            filteredAds = [];
+            renderAds();
+        }
+
+        // Form submission
+        document.getElementById('adForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                platform: document.getElementById('platform').value,
+                advertiser: document.getElementById('advertiser').value,
+                category: document.getElementById('category').value,
+                content: document.getElementById('content').value,
+                url: document.getElementById('url').value,
+                reportedBy: document.getElementById('reportedBy').value
+            };
+
+            addAd(formData);
+            this.reset();
+        });
+
+        // Real-time search
+        document.getElementById('searchTerm').addEventListener('input', applyFilters);
+
+        // Initialize
+        updateStats();
+        renderAds();
+
+        // Add some sample data for demonstration
+        setTimeout(() => {
+            addAd({
+                platform: 'Facebook',
+                advertiser: 'QuickCash LLC',
+                category: 'Financial',
+                content: 'GUARANTEED EASY MONEY! Work from home and make $5000/week with NO EXPERIENCE NEEDED! Limited time offer - ACT NOW! Click here to get started immediately!',
+                url: 'https://suspicious-site.com',
+                reportedBy: 'Officer Johnson #1234'
+            });
+
+            addAd({
+                platform: 'Google Ads',
+                advertiser: 'Local Electronics Store',
+                category: 'Technology',
+                content: 'Summer sale on laptops and smartphones. Up to 30% off selected items. Visit our store or shop online.',
+                url: 'https://legitimate-store.com',
+                reportedBy: 'Officer Smith #5678'
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
